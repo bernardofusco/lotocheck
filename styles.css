@@ -98,6 +98,11 @@ body {
     color: var(--text-light);
 }
 
+#hint-estatisticas {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
 .btn {
     width: 100%;
     padding: 1rem;
