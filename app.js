@@ -2,12 +2,24 @@
 const API_BASE_URL = CONFIG?.API_BASE_URL || 'https://apiloterias.com.br/app/v2/resultado';
 const API_TOKEN = CONFIG?.API_TOKEN || '';
 
+// Configuracao de quantidade de numeros por tipo de loteria
+const quantidadeNumerosPorJogo = {
+    megasena: 6,
+    quina: 5,
+    lotofacil: 15,
+    lotomania: 20,
+    timemania: 7,
+    duplasena: 6,
+    diadesorte: 7
+};
+
 const elements = {
     form: document.getElementById('loteria-form'),
     loteriaInput: document.getElementById('loteria-nome'),
     quantidadeInput: document.getElementById('quantidade'),
     resultadosContainer: document.getElementById('resultados'),
     messageContainer: document.getElementById('message'),
+    estatisticasContainer: document.getElementById('estatisticas'),
     submitBtn: document.querySelector('.btn-primary'),
     btnText: document.querySelector('.btn-text'),
     btnLoader: document.querySelector('.btn-loader')
@@ -51,11 +63,12 @@ async function fetchResultados(loteria, quantidade) {
     setLoading(true);
     hideMessage();
     clearResultados();
+    clearEstatisticas();
 
     try {
         const url = `${API_BASE_URL}?loteria=${encodeURIComponent(loteria)}&token=${API_TOKEN}&concurso=ultimos${quantidade}`;
         
-        console.log('URL da requisição:', url);
+        console.log('URL da requisicao:', url);
         
         const response = await fetch(url);
         
@@ -78,6 +91,7 @@ async function fetchResultados(loteria, quantidade) {
         }
 
         renderResultados(data);
+        calcularEstatisticas(data, loteria);
         showMessage(`${Array.isArray(data) ? data.length : 1} concurso(s) encontrado(s).`, 'success');
 
     } catch (error) {
@@ -346,6 +360,94 @@ function hideMessage() {
 
 function clearResultados() {
     elements.resultadosContainer.innerHTML = '';
+}
+
+function clearEstatisticas() {
+    elements.estatisticasContainer.innerHTML = '';
+    elements.estatisticasContainer.style.display = 'none';
+}
+
+function contarFrequenciaDezenas(concursos) {
+    const frequencias = {};
+    
+    const resultados = Array.isArray(concursos) ? concursos : [concursos];
+    
+    resultados.forEach(resultado => {
+        const dezenas = extractDezenas(resultado);
+        dezenas.forEach(dezena => {
+            const numero = dezena.toString().padStart(2, '0');
+            frequencias[numero] = (frequencias[numero] || 0) + 1;
+        });
+    });
+    
+    return frequencias;
+}
+
+function pegarMaisFrequentes(frequencias, quantidade) {
+    const ordenados = Object.entries(frequencias)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, quantidade);
+    
+    return ordenados.map(item => ({
+        numero: item[0],
+        frequencia: item[1]
+    }));
+}
+
+function calcularEstatisticas(data, loteria) {
+    const loteriaKey = loteria.toLowerCase().replace(/[^a-z]/g, '');
+    const quantidadeNumeros = quantidadeNumerosPorJogo[loteriaKey];
+    
+    if (!quantidadeNumeros) {
+        console.log('Loteria nao configurada para estatisticas:', loteria);
+        return;
+    }
+    
+    const frequencias = contarFrequenciaDezenas(data);
+    const maisFrequentes = pegarMaisFrequentes(frequencias, quantidadeNumeros);
+    
+    mostrarEstatisticas(maisFrequentes, loteria, quantidadeNumeros);
+}
+
+function mostrarEstatisticas(listaDezenas, loteria, quantidade) {
+    if (!listaDezenas || listaDezenas.length === 0) {
+        return;
+    }
+    
+    elements.estatisticasContainer.innerHTML = '';
+    
+    const titulo = document.createElement('h2');
+    titulo.className = 'estatisticas-titulo';
+    titulo.textContent = 'Numeros Mais Sorteados';
+    
+    const subtitulo = document.createElement('p');
+    subtitulo.className = 'estatisticas-subtitulo';
+    subtitulo.textContent = `Top ${quantidade} numeros mais frequentes`;
+    
+    const dezenasContainer = document.createElement('div');
+    dezenasContainer.className = 'estatisticas-dezenas';
+    
+    listaDezenas.forEach((item, index) => {
+        const dezenaWrapper = document.createElement('div');
+        dezenaWrapper.className = 'estatistica-item';
+        
+        const dezenaElement = document.createElement('div');
+        dezenaElement.className = 'dezena-estatistica';
+        dezenaElement.textContent = item.numero;
+        
+        const frequenciaElement = document.createElement('span');
+        frequenciaElement.className = 'frequencia-label';
+        frequenciaElement.textContent = `${item.frequencia}x`;
+        
+        dezenaWrapper.appendChild(dezenaElement);
+        dezenaWrapper.appendChild(frequenciaElement);
+        dezenasContainer.appendChild(dezenaWrapper);
+    });
+    
+    elements.estatisticasContainer.appendChild(titulo);
+    elements.estatisticasContainer.appendChild(subtitulo);
+    elements.estatisticasContainer.appendChild(dezenasContainer);
+    elements.estatisticasContainer.style.display = 'block';
 }
 
 function setLoading(isLoading) {
