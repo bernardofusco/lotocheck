@@ -7,11 +7,13 @@ Aplicacao web mobile-first para consultar resultados de loterias brasileiras usa
 - Consulta de resultados de qualquer loteria brasileira (Mega-Sena, Quina, Lotofacil, etc.)
 - Busca dos ultimos X concursos (de 1 a 50)
 - Interface responsiva e moderna (mobile-first)
+- **Analise Estatistica Automatica** - Mostra as dezenas mais frequentes baseadas nos concursos consultados
 - Exibicao de:
   - Numero do concurso
   - Data do sorteio
   - Dezenas sorteadas
   - Informacoes extras (local, cidade, ganhadores, premiacoes, acumulacao, etc.)
+  - **Estatisticas**: Dezenas mais frequentes e sugestao de jogo
 
 ## Tecnologias Utilizadas
 
@@ -95,6 +97,27 @@ Depois acesse: `http://localhost:8000`
 2. Informe quantos concursos anteriores deseja buscar (1 a 50)
 3. Clique em "Buscar Resultados"
 4. Visualize os resultados em cards
+5. **Veja a analise estatistica** com as dezenas mais frequentes e sugestao de jogo
+
+## Modulo de Estatisticas
+
+A aplicacao agora inclui um modulo de analise estatistica que:
+
+- **Analisa automaticamente** todas as dezenas sorteadas nos concursos consultados
+- **Conta a frequencia** de cada numero
+- **Sugere numeros** baseados nos mais frequentes, conforme a quantidade de numeros do jogo:
+  - Mega-Sena: 6 dezenas
+  - Quina: 5 dezenas
+  - Lotofacil: 15 dezenas
+  - Timemania: 7 dezenas
+  - Dupla Sena: 6 dezenas
+  - Lotomania: 50 dezenas
+  - Dia de Sorte: 7 dezenas
+  - Super Sete: 7 dezenas
+
+**Exemplo**: Ao consultar 20 concursos da Mega-Sena, o sistema mostra as 6 dezenas mais repetidas nesses 20 concursos.
+
+Para mais detalhes sobre o modulo de estatisticas, veja [ESTATISTICAS.md](ESTATISTICAS.md)
 
 ## Estrutura do Projeto
 
@@ -107,6 +130,7 @@ loteria/
 ??? config.js          # Configuracao real com token (NAO versionado)
 ??? .gitignore         # Arquivos ignorados pelo Git
 ??? README.md          # Documentacao
+??? ESTATISTICAS.md    # Documentacao do modulo de estatisticas
 ```
 
 ## Loterias Disponiveis
