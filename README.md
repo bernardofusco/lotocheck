@@ -2,12 +2,16 @@
 
 Aplicacao web mobile-first para consultar resultados de loterias brasileiras usando a API publica ApiLoterias.
 
+**NOVO: Agora disponivel como PWA (Progressive Web App) instalavel em celulares!**
+
 ## Funcionalidades
 
 - Consulta de resultados de qualquer loteria brasileira (Mega-Sena, Quina, Lotofacil, etc.)
 - Busca dos ultimos X concursos (de 1 a 50)
 - Interface responsiva e moderna (mobile-first)
 - **Analise Estatistica Automatica** - Mostra as dezenas mais frequentes baseadas nos concursos consultados
+- **PWA Instalavel** - Adicione o app na tela inicial do seu celular
+- **Funciona Offline** - Cache inteligente dos arquivos principais
 - Exibicao de:
   - Numero do concurso
   - Data do sorteio
@@ -20,6 +24,8 @@ Aplicacao web mobile-first para consultar resultados de loterias brasileiras usa
 - HTML5
 - CSS3 (com variaves CSS e design responsivo)
 - JavaScript (ES6+)
+- **PWA (Progressive Web App)** com Service Worker
+- **Manifest.json** para instalacao
 - API: [ApiLoterias](https://apiloterias.com.br)
 
 ## Como Usar
@@ -91,6 +97,73 @@ php -S localhost:8000
 
 Depois acesse: `http://localhost:8000`
 
+## PWA - Progressive Web App
+
+Este aplicativo agora funciona como um PWA e pode ser instalado no seu celular como se fosse um aplicativo nativo!
+
+### O que e um PWA?
+
+PWA (Progressive Web App) e uma tecnologia que permite que aplicacoes web funcionem como aplicativos nativos, podendo ser instalados na tela inicial do dispositivo, funcionar offline e ter uma experiencia de usuario similar a apps da loja.
+
+### Como Instalar o PWA no Celular
+
+#### Android (Chrome, Edge, Samsung Internet)
+
+1. Acesse o aplicativo pelo navegador usando o GitHub Pages: `https://SEU-USUARIO.github.io/SEU-REPOSITORIO`
+2. O navegador mostrara automaticamente um banner ou popup perguntando se voce deseja "Adicionar a tela inicial" ou "Instalar aplicativo"
+3. Toque em "Adicionar" ou "Instalar"
+4. O icone do app aparecera na tela inicial do seu celular
+5. Abra o app tocando no icone - ele abrira em modo standalone (sem barra do navegador)
+
+**Metodo alternativo:**
+1. Abra o menu do navegador (tres pontinhos)
+2. Selecione "Adicionar a tela inicial" ou "Instalar aplicativo"
+3. Confirme a instalacao
+
+#### iOS (Safari)
+
+1. Acesse o aplicativo pelo Safari: `https://SEU-USUARIO.github.io/SEU-REPOSITORIO`
+2. Toque no botao de compartilhar (quadrado com seta para cima)
+3. Role para baixo e selecione "Adicionar a Tela de Inicio"
+4. Edite o nome se desejar e toque em "Adicionar"
+5. O icone do app aparecera na tela inicial
+6. Abra o app tocando no icone
+
+### Funcionalidades do PWA
+
+- **Instalacao**: Adicione o app na tela inicial sem precisar da loja de aplicativos
+- **Modo Standalone**: Abre sem a barra de navegacao do navegador
+- **Cache Inteligente**: Arquivos principais ficam em cache para carregamento mais rapido
+- **Funciona Parcialmente Offline**: A interface e arquivos estaticos funcionam offline, mas consultas a API precisam de internet
+- **Atualizacoes Automaticas**: Quando voce acessa o app, ele verifica se ha atualizacoes
+
+### Arquivos do PWA
+
+- `manifest.json` - Configuracoes do PWA (nome, icones, cores, etc.)
+- `sw.js` - Service Worker que gerencia o cache
+- `icons/icon-192.png` - Icone 192x192 pixels
+- `icons/icon-512.png` - Icone 512x512 pixels
+
+### Cache do Service Worker
+
+O Service Worker faz cache dos seguintes arquivos:
+- Interface principal (HTML, CSS, JS)
+- Arquivo de configuracao
+- Icones do aplicativo
+
+**Nota**: Chamadas a API externa (ApiLoterias) nao sao cacheadas e sempre buscam dados atualizados da internet.
+
+### Desinstalar o PWA
+
+**Android:**
+1. Mantenha pressionado o icone do app
+2. Selecione "Desinstalar" ou "Remover"
+
+**iOS:**
+1. Mantenha pressionado o icone do app
+2. Selecione "Remover App"
+3. Confirme "Excluir App"
+
 ### 3. Usando a Aplicacao
 
 1. Digite o nome da loteria (ex: `megasena`, `quina`, `lotofacil`)
@@ -119,18 +192,27 @@ A aplicacao agora inclui um modulo de analise estatistica que:
 
 Para mais detalhes sobre o modulo de estatisticas, veja [ESTATISTICAS.md](ESTATISTICAS.md)
 
+Para mais detalhes sobre o PWA, veja [PWA.md](PWA.md)
+
+
 ## Estrutura do Projeto
 
 ```
 loteria/
 ??? index.html          # Estrutura HTML da aplicacao
 ??? styles.css          # Estilos CSS (design mobile-first)
-??? app.js             # Logica JavaScript
-??? config.example.js  # Exemplo de configuracao (versionado)
-??? config.js          # Configuracao real com token (NAO versionado)
-??? .gitignore         # Arquivos ignorados pelo Git
-??? README.md          # Documentacao
-??? ESTATISTICAS.md    # Documentacao do modulo de estatisticas
+??? app.js              # Logica JavaScript
+??? sw.js               # Service Worker para PWA
+??? manifest.json       # Manifesto do PWA
+??? config.example.js   # Exemplo de configuracao (versionado)
+??? config.js           # Configuracao real com token (NAO versionado)
+??? icons/              # Icones do PWA
+?   ??? icon-192.png    # Icone 192x192
+?   ??? icon-512.png    # Icone 512x512
+??? .gitignore          # Arquivos ignorados pelo Git
+??? README.md           # Documentacao
+??? ESTATISTICAS.md     # Documentacao do modulo de estatisticas
+??? PWA.md              # Documentacao detalhada do PWA
 ```
 
 ## Loterias Disponiveis
