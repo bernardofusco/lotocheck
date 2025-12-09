@@ -6,6 +6,4 @@
 !README.md
 !.gitignore
 !config.example.js
-
-# IMPORTANTE: Nunca commite o arquivo config.js (contem token privado)
-config.js
+!config.js
