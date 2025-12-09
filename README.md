@@ -146,7 +146,6 @@ Exemplos de loterias que podem ser consultadas:
 - `diadesorte` - Dia de Sorte
 - `supersete` - Super Sete
 - `federal` - Loteria Federal
-- `+milionaria` - +Milionaria
 
 ## Exemplos de Uso
 
