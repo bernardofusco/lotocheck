@@ -19,9 +19,11 @@ const elements = {
     quantidadeInput: document.getElementById('quantidade'),
     quantidadeEstatisticasInput: document.getElementById('quantidade-estatisticas'),
     hintEstatisticas: document.getElementById('hint-estatisticas'),
+    jogoUsuarioInput: document.getElementById('jogo-usuario'),
     resultadosContainer: document.getElementById('resultados'),
     messageContainer: document.getElementById('message'),
     estatisticasContainer: document.getElementById('estatisticas'),
+    comparacaoContainer: document.getElementById('comparacao'),
     submitBtn: document.querySelector('.btn-primary'),
     btnText: document.querySelector('.btn-text'),
     btnLoader: document.querySelector('.btn-loader')
@@ -88,12 +90,13 @@ function validateInputs(loteria, quantidade, quantidadeEstatisticas) {
 }
 
 async function fetchResultados(loteria, quantidade, quantidadeEstatisticas) {
-    setLoading(true);
-    hideMessage();
-    clearResultados();
-    clearEstatisticas();
+setLoading(true);
+hideMessage();
+clearResultados();
+clearEstatisticas();
+clearComparacao();
 
-    try {
+try {
         const url = `${API_BASE_URL}?loteria=${encodeURIComponent(loteria)}&token=${API_TOKEN}&concurso=ultimos${quantidade}`;
         
         console.log('URL da requisicao:', url);
@@ -120,6 +123,12 @@ async function fetchResultados(loteria, quantidade, quantidadeEstatisticas) {
 
         renderResultados(data);
         calcularEstatisticas(data, loteria, quantidadeEstatisticas);
+        
+        const jogoUsuario = elements.jogoUsuarioInput.value.trim();
+        if (jogoUsuario) {
+            compararJogoComConcursos(data, jogoUsuario);
+        }
+        
         showMessage(`${Array.isArray(data) ? data.length : 1} concurso(s) encontrado(s).`, 'success');
 
     } catch (error) {
@@ -391,6 +400,11 @@ function clearEstatisticas() {
     elements.estatisticasContainer.style.display = 'none';
 }
 
+function clearComparacao() {
+    elements.comparacaoContainer.innerHTML = '';
+    elements.comparacaoContainer.style.display = 'none';
+}
+
 function contarFrequenciaDezenas(concursos) {
     const frequencias = {};
     
@@ -487,4 +501,162 @@ function setLoading(isLoading) {
         elements.btnText.style.display = 'inline-block';
         elements.btnLoader.style.display = 'none';
     }
+}
+
+function validarJogoUsuario(jogoString) {
+    if (!jogoString || jogoString.trim() === '') {
+        return null;
+    }
+    
+    const numerosTexto = jogoString.trim().replace(/,/g, ' ').split(/\s+/);
+    const numeros = [];
+    
+    for (let i = 0; i < numerosTexto.length; i++) {
+        const num = parseInt(numerosTexto[i]);
+        if (isNaN(num) || num < 1 || num > 99) {
+            return null;
+        }
+        const numeroFormatado = num.toString().padStart(2, '0');
+        if (!numeros.includes(numeroFormatado)) {
+            numeros.push(numeroFormatado);
+        }
+    }
+    
+    return numeros.length > 0 ? numeros : null;
+}
+
+function compararJogoComConcursos(concursos, jogoUsuarioString) {
+    const jogoUsuario = validarJogoUsuario(jogoUsuarioString);
+    
+    if (!jogoUsuario) {
+        showMessage('Jogo invalido. Informe numeros entre 1 e 99 separados por espaco ou virgula.', 'error');
+        return;
+    }
+    
+    const resultados = Array.isArray(concursos) ? concursos : [concursos];
+    const listaAcertos = [];
+    
+    resultados.forEach(concurso => {
+        const dezenasConcurso = extractDezenas(concurso);
+        const dezenasFormatadas = dezenasConcurso.map(d => d.toString().padStart(2, '0'));
+        
+        const acertos = jogoUsuario.filter(numero => dezenasFormatadas.includes(numero));
+        
+        listaAcertos.push({
+            concurso: concurso.numero_concurso || concurso.concurso || concurso.numero || concurso.numeroConcurso || concurso.nrConcurso || 'N/A',
+            data: concurso.data_concurso || concurso.data || concurso.dataApuracao || concurso.dataSorteio || concurso.dataRealizacao || null,
+            quantidadeAcertos: acertos.length,
+            numerosAcertados: acertos
+        });
+    });
+    
+    const resumo = gerarResumoAcertos(listaAcertos);
+    mostrarResultadoComparacao(resumo);
+}
+
+function gerarResumoAcertos(listaAcertos) {
+    if (!listaAcertos || listaAcertos.length === 0) {
+        return {
+            temAcertos: false,
+            mensagem: 'Nenhum concurso disponivel para comparacao.'
+        };
+    }
+    
+    let melhorResultado = listaAcertos[0];
+    
+    for (let i = 1; i < listaAcertos.length; i++) {
+        if (listaAcertos[i].quantidadeAcertos > melhorResultado.quantidadeAcertos) {
+            melhorResultado = listaAcertos[i];
+        }
+    }
+    
+    if (melhorResultado.quantidadeAcertos === 0) {
+        return {
+            temAcertos: false,
+            mensagem: 'Nenhum acerto encontrado nos concursos pesquisados.'
+        };
+    }
+    
+    return {
+        temAcertos: true,
+        concurso: melhorResultado.concurso,
+        data: melhorResultado.data,
+        quantidadeAcertos: melhorResultado.quantidadeAcertos,
+        numerosAcertados: melhorResultado.numerosAcertados
+    };
+}
+
+function mostrarResultadoComparacao(resumo) {
+    elements.comparacaoContainer.innerHTML = '';
+    
+    const titulo = document.createElement('h2');
+    titulo.className = 'comparacao-titulo';
+    titulo.textContent = 'Resultado da Conferencia do Seu Jogo';
+    
+    const subtitulo = document.createElement('p');
+    subtitulo.className = 'comparacao-subtitulo';
+    subtitulo.textContent = 'Comparacao com os concursos consultados';
+    
+    elements.comparacaoContainer.appendChild(titulo);
+    elements.comparacaoContainer.appendChild(subtitulo);
+    
+    if (!resumo.temAcertos) {
+        const mensagem = document.createElement('div');
+        mensagem.className = 'comparacao-sem-acertos';
+        mensagem.textContent = resumo.mensagem;
+        elements.comparacaoContainer.appendChild(mensagem);
+    } else {
+        const resultado = document.createElement('div');
+        resultado.className = 'comparacao-resultado';
+        
+        const destaque = document.createElement('div');
+        destaque.className = 'comparacao-destaque';
+        destaque.textContent = `Concurso com mais acertos: ${resumo.concurso}`;
+        
+        const info = document.createElement('div');
+        info.className = 'comparacao-info';
+        
+        const itemData = document.createElement('div');
+        itemData.className = 'comparacao-info-item';
+        itemData.innerHTML = `
+            <span class="comparacao-info-label">Data:</span>
+            <span class="comparacao-info-value">${formatDate(resumo.data)}</span>
+        `;
+        
+        const itemAcertos = document.createElement('div');
+        itemAcertos.className = 'comparacao-info-item';
+        itemAcertos.innerHTML = `
+            <span class="comparacao-info-label">Quantidade de acertos:</span>
+            <span class="comparacao-info-value">${resumo.quantidadeAcertos}</span>
+        `;
+        
+        info.appendChild(itemData);
+        info.appendChild(itemAcertos);
+        
+        const labelNumeros = document.createElement('div');
+        labelNumeros.className = 'comparacao-info-label';
+        labelNumeros.textContent = 'Numeros que acertaram:';
+        labelNumeros.style.textAlign = 'center';
+        labelNumeros.style.marginTop = '1rem';
+        labelNumeros.style.marginBottom = '0.5rem';
+        
+        const numerosContainer = document.createElement('div');
+        numerosContainer.className = 'comparacao-numeros';
+        
+        resumo.numerosAcertados.forEach(numero => {
+            const dezenaElement = document.createElement('div');
+            dezenaElement.className = 'comparacao-dezena';
+            dezenaElement.textContent = numero;
+            numerosContainer.appendChild(dezenaElement);
+        });
+        
+        resultado.appendChild(destaque);
+        resultado.appendChild(info);
+        resultado.appendChild(labelNumeros);
+        resultado.appendChild(numerosContainer);
+        
+        elements.comparacaoContainer.appendChild(resultado);
+    }
+    
+    elements.comparacaoContainer.style.display = 'block';
 }
