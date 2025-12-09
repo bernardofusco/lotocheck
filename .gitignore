@@ -1,0 +1,11 @@
+# Ignore tudo exceto os arquivos essenciais
+*
+!index.html
+!styles.css
+!app.js
+!README.md
+!.gitignore
+!config.example.js
+
+# IMPORTANTE: Nunca commite o arquivo config.js (contem token privado)
+config.js

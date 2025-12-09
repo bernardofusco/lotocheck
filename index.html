@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Consulta de resultados de loterias brasileiras">
+    <title>Consulta Loterias</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Consulta Loterias</h1>
+            <p class="subtitle">Consulte os resultados das loterias brasileiras</p>
+        </header>
+
+        <main class="main-content">
+            <form id="loteria-form" class="form">
+                <div class="form-group">
+                    <label for="loteria-nome">Nome da Loteria:</label>
+                    <input 
+                        type="text" 
+                        id="loteria-nome" 
+                        name="loteria-nome"
+                        placeholder="Ex: megasena, quina, lotofacil"
+                        required
+                        autocomplete="off"
+                    >
+                    <small class="form-hint">Exemplos: megasena, quina, lotofacil, lotomania, duplasena, timemania, diadesorte</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="quantidade">Quantidade de Concursos:</label>
+                    <input 
+                        type="number" 
+                        id="quantidade" 
+                        name="quantidade"
+                        min="1"
+                        max="50"
+                        value="10"
+                        required
+                    >
+                    <small class="form-hint">Minimo: 1 | Maximo: 50</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <span class="btn-text">Buscar Resultados</span>
+                    <span class="btn-loader" style="display: none;">Carregando...</span>
+                </button>
+            </form>
+
+            <div id="message" class="message" style="display: none;"></div>
+
+            <div id="resultados" class="resultados-container"></div>
+        </main>
+
+        <footer class="footer">
+            <p>Dados fornecidos por <a href="https://apiloterias.com.br" target="_blank" rel="noopener">ApiLoterias</a></p>
+        </footer>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
