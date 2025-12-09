@@ -25,8 +25,8 @@ async function handleFormSubmit(event) {
         return;
     }
 
-    if (!API_TOKEN || API_TOKEN === 'SEU_TOKEN') {
-        showMessage('Erro: Configure o token da API no codigo antes de usar a aplicacao.', 'error');
+    if (!API_TOKEN || API_TOKEN === 'SEU_TOKEN_AQUI') {
+        showMessage('Erro: Configure o token da API no arquivo config.js antes de usar a aplicacao.', 'error');
         return;
     }
 
@@ -105,16 +105,12 @@ function renderResultados(data) {
 }
 
 function createResultadoCard(resultado) {
-// Debug: mostra a estrutura do objeto resultado no console
 console.log('Dados do resultado:', resultado);
     
 const card = document.createElement('div');
 card.className = 'resultado-card';
 
-// Extrai o numero do concurso tentando varios campos possiveis
 const numeroConcurso = resultado.numero_concurso || resultado.concurso || resultado.numero || resultado.numeroConcurso || resultado.nrConcurso || 'N/A';
-    
-// Extrai a data tentando varios campos possiveis
 const dataResultado = resultado.data_concurso || resultado.data || resultado.dataApuracao || resultado.dataSorteio || resultado.dataRealizacao || null;
 
 const header = document.createElement('div');
