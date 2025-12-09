@@ -2,26 +2,56 @@
 const API_BASE_URL = CONFIG?.API_BASE_URL || 'https://apiloterias.com.br/app/v2/resultado';
 const API_TOKEN = CONFIG?.API_TOKEN || '';
 
+// Configuracao de quantidade de numeros por tipo de loteria
+const quantidadeNumerosPorJogo = {
+    megasena: 6,
+    quina: 5,
+    lotofacil: 15,
+    lotomania: 20,
+    timemania: 7,
+    duplasena: 6,
+    diadesorte: 7
+};
+
 const elements = {
     form: document.getElementById('loteria-form'),
     loteriaInput: document.getElementById('loteria-nome'),
     quantidadeInput: document.getElementById('quantidade'),
+    quantidadeEstatisticasInput: document.getElementById('quantidade-estatisticas'),
+    hintEstatisticas: document.getElementById('hint-estatisticas'),
     resultadosContainer: document.getElementById('resultados'),
     messageContainer: document.getElementById('message'),
+    estatisticasContainer: document.getElementById('estatisticas'),
     submitBtn: document.querySelector('.btn-primary'),
     btnText: document.querySelector('.btn-text'),
     btnLoader: document.querySelector('.btn-loader')
 };
 
 elements.form.addEventListener('submit', handleFormSubmit);
+elements.loteriaInput.addEventListener('input', updateHintEstatisticas);
+
+function updateHintEstatisticas() {
+    const loteria = elements.loteriaInput.value.trim().toLowerCase();
+    const loteriaKey = loteria.replace(/[^a-z]/g, '');
+    const quantidadeMinima = quantidadeNumerosPorJogo[loteriaKey];
+    
+    if (quantidadeMinima) {
+        elements.hintEstatisticas.textContent = `Opcional - Minimo: ${quantidadeMinima} (quantidade de numeros da ${loteria})`;
+        elements.quantidadeEstatisticasInput.min = quantidadeMinima;
+    } else {
+        elements.hintEstatisticas.textContent = 'Opcional - Minimo igual a quantidade de numeros da loteria';
+        elements.quantidadeEstatisticasInput.min = 0;
+    }
+}
 
 async function handleFormSubmit(event) {
     event.preventDefault();
     
     const loteria = elements.loteriaInput.value.trim().toLowerCase();
     const quantidade = parseInt(elements.quantidadeInput.value);
+    const quantidadeEstatisticas = elements.quantidadeEstatisticasInput.value ? parseInt(elements.quantidadeEstatisticasInput.value) : null;
 
-    if (!validateInputs(loteria, quantidade)) {
+    if (!validateInputs(loteria, quantidade, quantidadeEstatisticas)) {
         return;
     }
 
@@ -30,10 +60,10 @@ async function handleFormSubmit(event) {
         return;
     }
 
-    await fetchResultados(loteria, quantidade);
+    await fetchResultados(loteria, quantidade, quantidadeEstatisticas);
 }
 
-function validateInputs(loteria, quantidade) {
+function validateInputs(loteria, quantidade, quantidadeEstatisticas) {
     if (!loteria) {
         showMessage('Por favor, informe o nome da loteria.', 'error');
         return false;
@@ -44,18 +74,29 @@ function validateInputs(loteria, quantidade) {
         return false;
     }
 
+    if (quantidadeEstatisticas !== null) {
+        const loteriaKey = loteria.toLowerCase().replace(/[^a-z]/g, '');
+        const quantidadeMinima = quantidadeNumerosPorJogo[loteriaKey];
+        
+        if (quantidadeMinima && quantidadeEstatisticas < quantidadeMinima) {
+            showMessage(`A quantidade de numeros mais sorteados deve ser no minimo ${quantidadeMinima} para ${loteria}.`, 'error');
+            return false;
+        }
+    }
+
     return true;
 }
 
-async function fetchResultados(loteria, quantidade) {
+async function fetchResultados(loteria, quantidade, quantidadeEstatisticas) {
     setLoading(true);
     hideMessage();
     clearResultados();
+    clearEstatisticas();
 
     try {
         const url = `${API_BASE_URL}?loteria=${encodeURIComponent(loteria)}&token=${API_TOKEN}&concurso=ultimos${quantidade}`;
         
-        console.log('URL da requisição:', url);
+        console.log('URL da requisicao:', url);
         
         const response = await fetch(url);
         
@@ -78,6 +119,7 @@ async function fetchResultados(loteria, quantidade) {
         }
 
         renderResultados(data);
+        calcularEstatisticas(data, loteria, quantidadeEstatisticas);
         showMessage(`${Array.isArray(data) ? data.length : 1} concurso(s) encontrado(s).`, 'success');
 
     } catch (error) {
@@ -342,6 +384,96 @@ function hideMessage() {
 
 function clearResultados() {
     elements.resultadosContainer.innerHTML = '';
+}
+
+function clearEstatisticas() {
+    elements.estatisticasContainer.innerHTML = '';
+    elements.estatisticasContainer.style.display = 'none';
+}
+
+function contarFrequenciaDezenas(concursos) {
+    const frequencias = {};
+    
+    const resultados = Array.isArray(concursos) ? concursos : [concursos];
+    
+    resultados.forEach(resultado => {
+        const dezenas = extractDezenas(resultado);
+        dezenas.forEach(dezena => {
+            const numero = dezena.toString().padStart(2, '0');
+            frequencias[numero] = (frequencias[numero] || 0) + 1;
+        });
+    });
+    
+    return frequencias;
+}
+
+function pegarMaisFrequentes(frequencias, quantidade) {
+    const ordenados = Object.entries(frequencias)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, quantidade);
+    
+    return ordenados.map(item => ({
+        numero: item[0],
+        frequencia: item[1]
+    }));
+}
+
+function calcularEstatisticas(data, loteria, quantidadeEstatisticas) {
+    const loteriaKey = loteria.toLowerCase().replace(/[^a-z]/g, '');
+    const quantidadePadrao = quantidadeNumerosPorJogo[loteriaKey];
+    
+    if (!quantidadePadrao) {
+        console.log('Loteria nao configurada para estatisticas:', loteria);
+        return;
+    }
+    
+    const quantidadeNumeros = quantidadeEstatisticas || quantidadePadrao;
+    
+    const frequencias = contarFrequenciaDezenas(data);
+    const maisFrequentes = pegarMaisFrequentes(frequencias, quantidadeNumeros);
+    
+    mostrarEstatisticas(maisFrequentes, loteria, quantidadeNumeros);
+}
+
+function mostrarEstatisticas(listaDezenas, loteria, quantidade) {
+    if (!listaDezenas || listaDezenas.length === 0) {
+        return;
+    }
+    
+    elements.estatisticasContainer.innerHTML = '';
+    
+    const titulo = document.createElement('h2');
+    titulo.className = 'estatisticas-titulo';
+    titulo.textContent = 'Numeros Mais Sorteados';
+    
+    const subtitulo = document.createElement('p');
+    subtitulo.className = 'estatisticas-subtitulo';
+    subtitulo.textContent = `Top ${quantidade} numeros mais frequentes`;
+    
+    const dezenasContainer = document.createElement('div');
+    dezenasContainer.className = 'estatisticas-dezenas';
+    
+    listaDezenas.forEach((item, index) => {
+        const dezenaWrapper = document.createElement('div');
+        dezenaWrapper.className = 'estatistica-item';
+        
+        const dezenaElement = document.createElement('div');
+        dezenaElement.className = 'dezena-estatistica';
+        dezenaElement.textContent = item.numero;
+        
+        const frequenciaElement = document.createElement('span');
+        frequenciaElement.className = 'frequencia-label';
+        frequenciaElement.textContent = `${item.frequencia}x`;
+        
+        dezenaWrapper.appendChild(dezenaElement);
+        dezenaWrapper.appendChild(frequenciaElement);
+        dezenasContainer.appendChild(dezenaWrapper);
+    });
+    
+    elements.estatisticasContainer.appendChild(titulo);
+    elements.estatisticasContainer.appendChild(subtitulo);
+    elements.estatisticasContainer.appendChild(dezenasContainer);
+    elements.estatisticasContainer.style.display = 'block';
 }
 
 function setLoading(isLoading) {
