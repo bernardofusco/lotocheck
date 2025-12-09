@@ -8,12 +8,14 @@ Aplicacao web mobile-first para consultar resultados de loterias brasileiras usa
 - Busca dos ultimos X concursos (de 1 a 50)
 - Interface responsiva e moderna (mobile-first)
 - **Analise Estatistica Automatica** - Mostra as dezenas mais frequentes baseadas nos concursos consultados
+- **Conferencia de Jogo** - Compare seu jogo com todos os concursos consultados
 - Exibicao de:
   - Numero do concurso
   - Data do sorteio
   - Dezenas sorteadas
   - Informacoes extras (local, cidade, ganhadores, premiacoes, acumulacao, etc.)
   - **Estatisticas**: Dezenas mais frequentes e sugestao de jogo
+  - **Resultado da Conferencia**: Concurso com mais acertos e quais numeros acertaram
 
 ## Tecnologias Utilizadas
 
@@ -95,9 +97,12 @@ Depois acesse: `http://localhost:8000`
 
 1. Digite o nome da loteria (ex: `megasena`, `quina`, `lotofacil`)
 2. Informe quantos concursos anteriores deseja buscar (1 a 50)
-3. Clique em "Buscar Resultados"
-4. Visualize os resultados em cards
-5. **Veja a analise estatistica** com as dezenas mais frequentes e sugestao de jogo
+3. (Opcional) Informe quantos numeros mais sorteados deseja ver nas estatisticas
+4. (Opcional) Informe seu jogo para conferir os acertos
+5. Clique em "Buscar Resultados"
+6. Visualize os resultados em cards
+7. **Veja a analise estatistica** com as dezenas mais frequentes
+8. **Veja a conferencia do seu jogo** (se informado) com os acertos encontrados
 
 ## Modulo de Estatisticas
 
@@ -118,6 +123,33 @@ A aplicacao agora inclui um modulo de analise estatistica que:
 **Exemplo**: Ao consultar 20 concursos da Mega-Sena, o sistema mostra as 6 dezenas mais repetidas nesses 20 concursos.
 
 Para mais detalhes sobre o modulo de estatisticas, veja [ESTATISTICAS.md](ESTATISTICAS.md)
+
+## Modulo de Conferencia de Jogo
+
+A aplicacao agora permite que voce confira seu proprio jogo com os concursos consultados:
+
+- **Informe seu jogo** no campo opcional (ex: `05 12 20 27 44 56`)
+- **Separacao flexivel**: Use espacos ou virgulas para separar os numeros
+- **Comparacao automatica**: O sistema compara seu jogo com todos os concursos retornados
+- **Resultado detalhado**:
+  - Qual concurso teve mais acertos
+  - Quantos acertos foram encontrados
+  - Quais numeros acertaram
+  - Se nao houve acertos, o sistema informa
+
+**Exemplo de uso:**
+
+1. Consulte os ultimos 10 concursos da Mega-Sena
+2. Informe seu jogo: `05 12 20 27 44 56`
+3. O sistema mostra, por exemplo:
+   - Concurso com mais acertos: 2630
+   - Quantidade de acertos: 3
+   - Numeros que acertaram: 05, 12, 44
+
+**Validacao:**
+- Numeros devem estar entre 1 e 99
+- Numeros duplicados sao automaticamente removidos
+- Formato invalido exibe mensagem de erro clara
 
 ## Estrutura do Projeto
 
