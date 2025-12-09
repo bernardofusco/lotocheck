@@ -17,6 +17,8 @@ const elements = {
     form: document.getElementById('loteria-form'),
     loteriaInput: document.getElementById('loteria-nome'),
     quantidadeInput: document.getElementById('quantidade'),
+    quantidadeEstatisticasInput: document.getElementById('quantidade-estatisticas'),
+    hintEstatisticas: document.getElementById('hint-estatisticas'),
     resultadosContainer: document.getElementById('resultados'),
     messageContainer: document.getElementById('message'),
     estatisticasContainer: document.getElementById('estatisticas'),
@@ -26,14 +28,30 @@ const elements = {
 };
 
 elements.form.addEventListener('submit', handleFormSubmit);
+elements.loteriaInput.addEventListener('input', updateHintEstatisticas);
+
+function updateHintEstatisticas() {
+    const loteria = elements.loteriaInput.value.trim().toLowerCase();
+    const loteriaKey = loteria.replace(/[^a-z]/g, '');
+    const quantidadeMinima = quantidadeNumerosPorJogo[loteriaKey];
+    
+    if (quantidadeMinima) {
+        elements.hintEstatisticas.textContent = `Opcional - Minimo: ${quantidadeMinima} (quantidade de numeros da ${loteria})`;
+        elements.quantidadeEstatisticasInput.min = quantidadeMinima;
+    } else {
+        elements.hintEstatisticas.textContent = 'Opcional - Minimo igual a quantidade de numeros da loteria';
+        elements.quantidadeEstatisticasInput.min = 0;
+    }
+}
 
 async function handleFormSubmit(event) {
     event.preventDefault();
     
     const loteria = elements.loteriaInput.value.trim().toLowerCase();
     const quantidade = parseInt(elements.quantidadeInput.value);
+    const quantidadeEstatisticas = elements.quantidadeEstatisticasInput.value ? parseInt(elements.quantidadeEstatisticasInput.value) : null;
 
-    if (!validateInputs(loteria, quantidade)) {
+    if (!validateInputs(loteria, quantidade, quantidadeEstatisticas)) {
         return;
     }
 
@@ -42,10 +60,10 @@ async function handleFormSubmit(event) {
         return;
     }
 
-    await fetchResultados(loteria, quantidade);
+    await fetchResultados(loteria, quantidade, quantidadeEstatisticas);
 }
 
-function validateInputs(loteria, quantidade) {
+function validateInputs(loteria, quantidade, quantidadeEstatisticas) {
     if (!loteria) {
         showMessage('Por favor, informe o nome da loteria.', 'error');
         return false;
@@ -56,10 +74,20 @@ function validateInputs(loteria, quantidade) {
         return false;
     }
 
+    if (quantidadeEstatisticas !== null) {
+        const loteriaKey = loteria.toLowerCase().replace(/[^a-z]/g, '');
+        const quantidadeMinima = quantidadeNumerosPorJogo[loteriaKey];
+        
+        if (quantidadeMinima && quantidadeEstatisticas < quantidadeMinima) {
+            showMessage(`A quantidade de numeros mais sorteados deve ser no minimo ${quantidadeMinima} para ${loteria}.`, 'error');
+            return false;
+        }
+    }
+
     return true;
 }
 
-async function fetchResultados(loteria, quantidade) {
+async function fetchResultados(loteria, quantidade, quantidadeEstatisticas) {
     setLoading(true);
     hideMessage();
     clearResultados();
@@ -91,7 +119,7 @@ async function fetchResultados(loteria, quantidade) {
         }
 
         renderResultados(data);
-        calcularEstatisticas(data, loteria);
+        calcularEstatisticas(data, loteria, quantidadeEstatisticas);
         showMessage(`${Array.isArray(data) ? data.length : 1} concurso(s) encontrado(s).`, 'success');
 
     } catch (error) {
@@ -394,14 +422,16 @@ function pegarMaisFrequentes(frequencias, quantidade) {
     }));
 }
 
-function calcularEstatisticas(data, loteria) {
+function calcularEstatisticas(data, loteria, quantidadeEstatisticas) {
     const loteriaKey = loteria.toLowerCase().replace(/[^a-z]/g, '');
-    const quantidadeNumeros = quantidadeNumerosPorJogo[loteriaKey];
+    const quantidadePadrao = quantidadeNumerosPorJogo[loteriaKey];
     
-    if (!quantidadeNumeros) {
+    if (!quantidadePadrao) {
         console.log('Loteria nao configurada para estatisticas:', loteria);
         return;
     }
+    
+    const quantidadeNumeros = quantidadeEstatisticas || quantidadePadrao;
     
     const frequencias = contarFrequenciaDezenas(data);
     const maisFrequentes = pegarMaisFrequentes(frequencias, quantidadeNumeros);
