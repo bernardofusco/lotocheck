@@ -18,23 +18,15 @@
             <form id="loteria-form" class="form">
                 <div class="form-group">
                     <label for="loteria-nome">Nome da Loteria:</label>
-                    <select 
+                    <input 
+                        type="text" 
                         id="loteria-nome" 
                         name="loteria-nome"
+                        placeholder="Ex: megasena, quina, lotofacil"
                         required
+                        autocomplete="off"
                     >
-                        <option value="">Selecione uma loteria</option>
-                        <option value="megasena">Mega-Sena</option>
-                        <option value="quina">Quina</option>
-                        <option value="lotofacil">Lotofácil</option>
-                        <option value="lotomania">Lotomania</option>
-                        <option value="timemania">Timemania</option>
-                        <option value="duplasena">Dupla Sena</option>
-                        <option value="diadesorte">Dia de Sorte</option>
-                        <option value="supersete">Super Sete</option>
-                        <option value="federal">Loteria Federal</option>
-                    </select>
-                    <small class="form-hint">Selecione a loteria que deseja consultar</small>
+                    <small class="form-hint">Exemplos: megasena, quina, lotofacil, lotomania, duplasena, timemania, diadesorte</small>
                 </div>
 
                 <div class="form-group">

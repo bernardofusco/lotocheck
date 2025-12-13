@@ -3,5 +3,5 @@
 
 const CONFIG = {
     API_BASE_URL: 'https://apiloterias.com.br/app/v2/resultado',
-    API_TOKEN: 'A3V0bpHOgLVuA8k'
+    API_TOKEN: 'SEU_TOKEN_AQUI'
 };
